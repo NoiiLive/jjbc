@@ -1,0 +1,110 @@
+JoJo's Bizarre Campaign Concept
+
+# Lobby Place
+- Start in a lobby world, can roam freely
+- Bottom, button navigation for menus
+  - Party
+  - Player
+  - Goals
+  - Shop
+  - Logs
+
+## Party Menu
+- Pop-up menu, contains a list of joinable parties
+- Search bar at the bottom for searching usernames to join their party
+- Two buttons, One to create a party, another to close the menu
+### Party Creation Menu
+- Set the party size with arrows, 1-5 players
+- Toggle for friends only
+- Difficulty slider, Easy / Normal / Hard / Nightmare
+### Party Waiting Menu
+- A section for displaying the active party members
+- Two buttons below, One to disband, another to Start (can start without the party full)
+- Right side contains a list of modifiers, to make the game harder for extra cash and exp
+
+## Player Menu
+- Hides the other buttons, full screen usage
+- Buttons at the top, Customization, Classes, Perks
+- Button at the bottom, Finish (close menu)
+### Customization Menu
+- Center stays open to see player
+- Left side contains list with options for customization
+  - Contains skin color section (set selections), hair color section (set selections)
+  - Contains face options, eyebrows, eyes eye color (set selections), nose, mouth
+  - Contains a button for outfits, which brings up a popup menu and list
+  - Contains a button for accessories which brings up a popup menu and list
+- Right side contains Hair IDs, or color wheel depending on option
+### Classes Menu
+- Left side contains a list of classes to select and choose
+- Right side contains a text box with descriptions
+### Perks Menu
+- A central popup menu, containing a list of equippable perks
+- Lefts side is descriptions, middle is perk lost, right is equipped perks (up to 5)
+
+## Goals Menu
+- Popup menu, contains a list with boxes with achievements/goals
+- Button at the bottom to close
+
+## Shop Menu
+- Popup menu, contains a list of purchasable products/passes
+- Button at the bottom to close
+
+## Logs Menu
+- Popup menu, contains a list with boxes with update logs
+- Button at the bottom to close
+
+# Game Place
+- Players teleport to a private game instance with their party.
+- They will automatically get their perks, classes, etc. equipped and setup.
+
+## General Gameplay
+- Players will be lined up against an enemy team in combat encounters 
+- The camera will always be at a set location, no camera movement
+- There will be multiple background sets, which can be changed at any moment to fit the combat encounters
+- Just as combat, during rest encounters, same system, set camera, and a set background scene, with positions to place the party players
+
+## Combat Scene
+- 5 slots for players on the left, 5 slots for enemies on the right
+- Bottom middle contains information and buttons, such as health, stamina, and active effects 
+- Combat is turn based, when its your turn, your healthbar area will push and up and show 3 new buttons: Fight/Item/Rest
+- Combat section contains a list of abilities, determined on your class, level, and other factors determined ingame
+- Items section contains a list of consumables from your inventory
+- Rest section uses up your turn to generate more energy
+
+## Rest Scene
+- Contains 5 slots to place party members
+- Contains a central menu
+- Contains tabs, for items, abilities, and crafting
+- Item tab contains a list of all your items in your inventory, with a description box at the bottom for the selected item
+- Ability tab contains a list of your abilities, with a description box at rhe bottom for the selected ability
+- Crafting tab contains a list of items you have at least 1 item for the recipe to craft, and a description box at the bottom for the selected item
+- Left side contains a stash that players can add items to, to share them with their party
+- Right side contains a section with your equipment slots, and stats
+- Bottom contains a button to Ready, to move on to the next encounter when a majority is ready
+
+## Encounters
+- Once moving on from a rest scene, players vote for their next encounter 
+- Random selection of 3 different encounters, and two extra buttons to either scavenge and area for items, or rest to regain more hp or train
+- Encounters start with scenes and text boxes, players voting on chat options choosing how the encounter goes
+- At the end of every encounter is a battle scene, either fighting specific enemies due to the encounter option, or random enemies if they finish the encounter peacefully
+
+## Stats
+- Broken into two sections, Body Stats, and Mind Stats
+- Body Stats: Strength, Health, Defense
+- Mind Stats: Intelligence, Spirit, Willpower
+- Stats affect different skills depending on your class, and can provide certain checks in encounters to change the outcome
+- Health and Defense provide direct bonuses to the player, regardless of class
+- Strength affects the power of more physical oriented abilities, can be used in encounter checks
+- Spirit affects the power of more supernatural related abilities, and csn be used in certain encounters checks 
+- Intelligence affects ability accuracy, dodge chance/dodge negation, and other factors of certain skills, is used for encounter cheks
+- Willpower affects critical chances, and other factors of certain skills, and is used in encounters checks
+### Stat Box
+- The menu in rest area where your stats are listed, shows your information and bonuses
+- Also shows other information, like class, abilities, stand, etc.
+
+## Equipment 
+- Players have multiple equipment slots to put gear they find, buy, or craft
+- Helmet / Chest / Pants / Boots
+- Weapon / Charms x3
+- Can be equipped and unequipped from the slots, also hidden visually 
+- Provide stat bonuses, and sometimes passives, as well as active skills
