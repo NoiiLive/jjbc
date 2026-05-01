@@ -6,23 +6,31 @@ function PopupBuilder.build(screenGui, UIUtils, bottomNavContainer)
 
 	local partyMenuBG, partyContainer, partyList = UIUtils.createStandardPopup("Party", screenGui, bottomNavContainer)
 	popups["Party"] = partyMenuBG
-	partyList.Size = UDim2.new(1, -20, 1, -160)
+	partyList.Size = UDim2.new(0.95, 0, 0.55, 0)
 
 	local partyBottomBar = Instance.new("Frame")
 	partyBottomBar.Name = "PartyBottomBar"
-	partyBottomBar.Size = UDim2.new(1, -20, 0, 40)
-	partyBottomBar.Position = UDim2.new(0, 10, 1, -110)
+	partyBottomBar.AnchorPoint = Vector2.new(0.5, 1)
+	partyBottomBar.Size = UDim2.new(0.95, 0, 0.12, 0)
+	partyBottomBar.Position = UDim2.new(0.5, 0, 0.82, 0)
 	partyBottomBar.BackgroundTransparency = 1
 	partyBottomBar.Parent = partyContainer
 
 	local partySearch = Instance.new("TextBox")
 	partySearch.Name = "SearchBar"
 	partySearch.Size = UDim2.new(0.65, 0, 1, 0)
+	partySearch.Text = ""
 	partySearch.PlaceholderText = "Search username..."
-	partySearch.Font = Enum.Font.Gotham
-	partySearch.TextSize = 16
-	partySearch.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	partySearch.TextColor3 = Color3.fromRGB(255, 255, 255)
+	partySearch.Font = Enum.Font.Oswald
+	partySearch.TextScaled = true
+	partySearch.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	partySearch.TextColor3 = Color3.fromRGB(240, 240, 240)
+	partySearch.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+	local searchStroke = Instance.new("UIStroke")
+	searchStroke.Color = Color3.fromRGB(218, 165, 32)
+	searchStroke.Thickness = 1
+	searchStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	searchStroke.Parent = partySearch
 	UIUtils.addCorner(partySearch, 6)
 	UIUtils.addPadding(partySearch, 10)
 	partySearch.Parent = partyBottomBar
