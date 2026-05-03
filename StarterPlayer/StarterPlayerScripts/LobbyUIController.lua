@@ -1,10 +1,15 @@
 -- @ScriptType: LocalScript
+-- @ScriptType: LocalScript
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 
 local UIUtils = require(script:WaitForChild("UIUtils"))
 local PlayerMenuBuilder = require(script:WaitForChild("PlayerMenuBuilder"))
-local PopupBuilder = require(script:WaitForChild("PopupBuilder"))
+local PartyMenuBuilder = require(script:WaitForChild("PartyMenuBuilder"))
+local GoalsMenuBuilder = require(script:WaitForChild("GoalsMenuBuilder"))
+local ShopMenuBuilder = require(script:WaitForChild("ShopMenuBuilder"))
+local LogsMenuBuilder = require(script:WaitForChild("LogsMenuBuilder"))
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LobbyUI"
@@ -12,24 +17,24 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true 
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local coinsLabel = Instance.new("TextLabel")
-coinsLabel.Name = "CoinsDisplay"
-coinsLabel.AnchorPoint = Vector2.new(1, 0)
-coinsLabel.Size = UDim2.new(0.15, 0, 0.06, 0)
-coinsLabel.Position = UDim2.new(0.98, 0, 0.02, 0)
-coinsLabel.Text = "Coins: 0"
-coinsLabel.Font = Enum.Font.Oswald
-coinsLabel.TextScaled = true
-coinsLabel.BackgroundTransparency = 0.1
-coinsLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-coinsLabel.TextColor3 = Color3.fromRGB(218, 165, 32)
-local coinsStroke = Instance.new("UIStroke")
-coinsStroke.Color = Color3.fromRGB(218, 165, 32)
-coinsStroke.Thickness = 2
-coinsStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-coinsStroke.Parent = coinsLabel
-UIUtils.addCorner(coinsLabel, 6)
-coinsLabel.Parent = screenGui
+local cashLabel = Instance.new("TextLabel")
+cashLabel.Name = "CashDisplay"
+cashLabel.AnchorPoint = Vector2.new(1, 0)
+cashLabel.Size = UDim2.new(0.15, 0, 0.06, 0)
+cashLabel.Position = UDim2.new(0.98, 0, 0.02, 0)
+cashLabel.Text = "Loading Cash..."
+cashLabel.Font = Enum.Font.Oswald
+cashLabel.TextScaled = true
+cashLabel.BackgroundTransparency = 0.1
+cashLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+cashLabel.TextColor3 = Color3.fromRGB(30, 200, 30)
+local cashStroke = Instance.new("UIStroke")
+cashStroke.Color = Color3.fromRGB(30, 150, 30)
+cashStroke.Thickness = 2
+cashStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+cashStroke.Parent = cashLabel
+UIUtils.addCorner(cashLabel, 6)
+cashLabel.Parent = screenGui
 
 local bottomNavContainer = Instance.new("Frame")
 bottomNavContainer.Name = "BottomNavContainer"
@@ -60,13 +65,31 @@ for i, menu in ipairs(menus) do
 	menuButtons[menu] = btn
 end
 
-local playerMenu = PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
-menuFrames["Player"] = playerMenu
+-- Notification Badge for Goals
+local goalsBtn = menuButtons["Goals"]
+local notifBadge = Instance.new("Frame")
+notifBadge.Name = "NotifBadge"
+notifBadge.Size = UDim2.new(0, 18, 0, 18)
+notifBadge.Position = UDim2.new(1, -9, 0, -9)
+notifBadge.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
+UIUtils.addCorner(notifBadge, 9)
+notifBadge.Visible = false
+notifBadge.Parent = goalsBtn
 
-local popups = PopupBuilder.build(screenGui, UIUtils, bottomNavContainer)
-for name, frame in popups do
-	menuFrames[name] = frame
-end
+local notifText = Instance.new("TextLabel")
+notifText.Size = UDim2.new(1, 0, 1, 0)
+notifText.BackgroundTransparency = 1
+notifText.Text = "!"
+notifText.TextColor3 = Color3.new(1, 1, 1)
+notifText.Font = Enum.Font.GothamBold
+notifText.TextScaled = true
+notifText.Parent = notifBadge
+
+menuFrames["Player"] = PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
+menuFrames["Party"] = PartyMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
+menuFrames["Goals"] = GoalsMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
+menuFrames["Shop"] = ShopMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
+menuFrames["Logs"] = LogsMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 
 for _, menu in ipairs(menus) do
 	menuButtons[menu].MouseButton1Click:Connect(function()
@@ -76,3 +99,25 @@ for _, menu in ipairs(menus) do
 		bottomNavContainer.Visible = false
 	end)
 end
+
+-- Data Syncing Logic
+local PlayerDataEvents = ReplicatedStorage:WaitForChild("PlayerDataEvents")
+
+local function updateUIWithData(data)
+	cashLabel.Text = "Cash: $" .. (data.Cash or 0)
+
+	if not data.ClaimedAchievements or not data.ClaimedAchievements["Welcome"] then
+		notifBadge.Visible = true
+	else
+		notifBadge.Visible = false
+	end
+end
+
+task.spawn(function()
+	local initialData = PlayerDataEvents.RequestPlayerData:InvokeServer()
+	updateUIWithData(initialData)
+end)
+
+PlayerDataEvents.SyncPlayerData.OnClientEvent:Connect(function(newData)
+	updateUIWithData(newData)
+end)
