@@ -1,7 +1,9 @@
 -- @ScriptType: Script
+-- @ScriptType: Script
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local playerDataStore = DataStoreService:GetDataStore("JoJoCampaignData_V1")
 
@@ -17,8 +19,48 @@ if not updateHairEvent then
 	updateHairEvent.Parent = ReplicatedStorage
 end
 
+-- Create events for syncing data to the client
+local PlayerDataEvents = ReplicatedStorage:FindFirstChild("PlayerDataEvents")
+if not PlayerDataEvents then
+	PlayerDataEvents = Instance.new("Folder")
+	PlayerDataEvents.Name = "PlayerDataEvents"
+	PlayerDataEvents.Parent = ReplicatedStorage
+
+	Instance.new("RemoteEvent", PlayerDataEvents).Name = "SyncPlayerData"
+	Instance.new("RemoteFunction", PlayerDataEvents).Name = "RequestPlayerData"
+end
+
+-- Create events for Server-to-Server data manipulation
+local ServerDataEvents = ServerStorage:FindFirstChild("ServerDataEvents")
+if not ServerDataEvents then
+	ServerDataEvents = Instance.new("Folder")
+	ServerDataEvents.Name = "ServerDataEvents"
+	ServerDataEvents.Parent = ServerStorage
+
+	Instance.new("BindableFunction", ServerDataEvents).Name = "GetPlayerData"
+	Instance.new("BindableEvent", ServerDataEvents).Name = "SetPlayerData"
+end
+
 local sessionData = {}
 local isDataLoaded = {}
+
+ServerDataEvents.GetPlayerData.OnInvoke = function(player)
+	return sessionData[player.UserId]
+end
+
+ServerDataEvents.SetPlayerData.Event:Connect(function(player, key, value)
+	if sessionData[player.UserId] then
+		sessionData[player.UserId][key] = value
+		PlayerDataEvents.SyncPlayerData:FireClient(player, sessionData[player.UserId])
+	end
+end)
+
+PlayerDataEvents.RequestPlayerData.OnServerInvoke = function(player)
+	while not isDataLoaded[player.UserId] do
+		task.wait(0.1)
+	end
+	return sessionData[player.UserId]
+end
 
 local function applyAvatar(player, character, hairData)
 	local humanoid = character:WaitForChild("Humanoid", 5)
@@ -127,8 +169,16 @@ Players.PlayerAdded:Connect(function(player)
 	if success and data then
 		sessionData[player.UserId] = data
 	else
-		sessionData[player.UserId] = {Hair = nil}
+		sessionData[player.UserId] = {
+			Hair = nil,
+			Cash = 0,
+			ClaimedAchievements = {}
+		}
 	end
+
+	-- Ensure defaults exist for older data saves
+	sessionData[player.UserId].Cash = sessionData[player.UserId].Cash or 0
+	sessionData[player.UserId].ClaimedAchievements = sessionData[player.UserId].ClaimedAchievements or {}
 
 	if not sessionData[player.UserId].Hair then
 		local s, desc = pcall(function() return Players:GetHumanoidDescriptionFromUserId(player.UserId) end)
