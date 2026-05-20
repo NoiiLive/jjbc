@@ -13,11 +13,17 @@ if not custFolder then
 	custFolder.Name = "Customization"
 	custFolder.Parent = ReplicatedStorage
 
-	local folders = {"Outfits", "Accessories", "Eyes", "Eyebrows", "Nose", "Mouth"}
+	local folders = {"Outfits", "Accessories", "Eyes", "Nose", "Mouth"}
 	for _, fName in ipairs(folders) do
 		local f = Instance.new("Folder")
 		f.Name = fName
 		f.Parent = custFolder
+
+		-- Setup base structure for Fill folders inside Eyes
+		if fName == "Eyes" then
+			Instance.new("Folder", f).Name = "FillEyes"
+			Instance.new("Folder", f).Name = "FillEyebrows"
+		end
 	end
 
 	local defaultShirt = Instance.new("Shirt")
@@ -35,6 +41,7 @@ local DEFAULT_SHIRT_TEMPLATE = "rbxassetid://125195176"
 local DEFAULT_PANTS_TEMPLATE = "rbxassetid://125195172"
 local PEACH_SKIN_COLOR = Color3.fromRGB(225, 176, 135)
 local BLACK_HAIR_COLOR = Color3.new(0, 0, 0)
+local DEFAULT_EYE_COLOR = Color3.fromRGB(99, 78, 52)
 
 local updateHairEvent = ReplicatedStorage:FindFirstChild("UpdateHairEvent")
 if not updateHairEvent then
@@ -95,6 +102,7 @@ local function applyAvatar(player, character, pData)
 
 	local skinColor = parseColor(pData.SkinColor, PEACH_SKIN_COLOR)
 	local hairColor = parseColor(pData.HairColor, BLACK_HAIR_COLOR)
+	local eyeColor = parseColor(pData.EyeColor, DEFAULT_EYE_COLOR)
 
 	local description = Instance.new("HumanoidDescription")
 	description.Face = 0
@@ -127,6 +135,8 @@ local function applyAvatar(player, character, pData)
 
 	local head = character:FindFirstChild("Head")
 	if head then
+		head.Transparency = 0.001
+
 		local headMesh = head:FindFirstChildOfClass("SpecialMesh")
 		if not headMesh then
 			headMesh = Instance.new("SpecialMesh")
@@ -135,18 +145,48 @@ local function applyAvatar(player, character, pData)
 			headMesh.Parent = head
 		end
 
+		-- Explicitly destroy ALL existing decals
 		for _, v in ipairs(head:GetChildren()) do
-			if v:IsA("Decal") and v.Name ~= "face" then v:Destroy() end
+			if v:IsA("Decal") then v:Destroy() end
 		end
-		local features = {"Eyebrows", "Eyes", "Nose", "Mouth"}
+
+		local features = {"Eyes", "Nose", "Mouth"}
 		for _, fName in ipairs(features) do
-			if pData[fName] then
+			if pData[fName] and pData[fName] ~= "None" then
 				local fFolder = custFolder:FindFirstChild(fName)
 				if fFolder then
+
+					-- 1. Apply the Main Decal Outline
 					local decalProto = fFolder:FindFirstChild(pData[fName])
 					if decalProto and decalProto:IsA("Decal") then
 						local cl = decalProto:Clone()
+						cl.ZIndex = 2 -- Renders on top
 						cl.Parent = head
+					end
+
+					-- 2. Apply Custom Fill Layers for Eyes
+					if fName == "Eyes" then
+						local fillEyesFolder = fFolder:FindFirstChild("FillEyes")
+						if fillEyesFolder then
+							local feProto = fillEyesFolder:FindFirstChild(pData[fName])
+							if feProto and feProto:IsA("Decal") then
+								local clFill = feProto:Clone()
+								clFill.ZIndex = 1 -- Renders underneath outline
+								clFill.Color3 = eyeColor
+								clFill.Parent = head
+							end
+						end
+
+						local fillBrowsFolder = fFolder:FindFirstChild("FillEyebrows")
+						if fillBrowsFolder then
+							local fbProto = fillBrowsFolder:FindFirstChild(pData[fName])
+							if fbProto and fbProto:IsA("Decal") then
+								local clBrows = fbProto:Clone()
+								clBrows.ZIndex = 1 -- Renders underneath outline
+								clBrows.Color3 = hairColor
+								clBrows.Parent = head
+							end
+						end
 					end
 				end
 			end
@@ -236,12 +276,12 @@ Players.PlayerAdded:Connect(function(player)
 			ShirtTemplate = DEFAULT_SHIRT_TEMPLATE,
 			PantsTemplate = DEFAULT_PANTS_TEMPLATE,
 			Accessory = nil,
-			Eyebrows = nil,
-			Eyes = nil,
-			Nose = nil,
-			Mouth = nil,
+			Eyes = "Eyes1",
+			Nose = "Nose1",
+			Mouth = "Mouth1",
 			SkinColor = "225,176,135",
 			HairColor = "0,0,0",
+			EyeColor = "99,78,52",
 			Cash = 0,
 			ClaimedAchievements = {}
 		}
@@ -254,6 +294,10 @@ Players.PlayerAdded:Connect(function(player)
 	sessionData[player.UserId].PantsTemplate = sessionData[player.UserId].PantsTemplate or DEFAULT_PANTS_TEMPLATE
 	sessionData[player.UserId].SkinColor = sessionData[player.UserId].SkinColor or "225,176,135"
 	sessionData[player.UserId].HairColor = sessionData[player.UserId].HairColor or "0,0,0"
+	sessionData[player.UserId].EyeColor = sessionData[player.UserId].EyeColor or "99,78,52"
+	sessionData[player.UserId].Eyes = sessionData[player.UserId].Eyes or "Eyes1"
+	sessionData[player.UserId].Nose = sessionData[player.UserId].Nose or "Nose1"
+	sessionData[player.UserId].Mouth = sessionData[player.UserId].Mouth or "Mouth1"
 
 	-- Fetch Original Hair from API
 	local realHair = ""
@@ -295,7 +339,7 @@ updateHairEvent.OnServerEvent:Connect(function(player, action, payload)
 
 	if action == "CustomHair" then
 		pData.Hair = tostring(payload)
-	elseif action == "SkinColor" or action == "HairColor" then
+	elseif action == "SkinColor" or action == "HairColor" or action == "EyeColor" then
 		pData[action] = tostring(payload)
 	elseif action == "Outfit" then
 		pData.ShirtTemplate = payload.ShirtTemplate
@@ -308,7 +352,7 @@ updateHairEvent.OnServerEvent:Connect(function(player, action, payload)
 		end
 	elseif action == "DefaultHair" then
 		pData.Hair = pData.OriginalHair or ""
-	elseif action == "Eyebrows" or action == "Eyes" or action == "Nose" or action == "Mouth" then
+	elseif action == "Eyes" or action == "Nose" or action == "Mouth" then
 		pData[action] = tostring(payload)
 	end
 
