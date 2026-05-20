@@ -9,7 +9,6 @@ local CustomizationFolder = ReplicatedStorage:WaitForChild("Customization")
 
 local PlayerMenuBuilder = {}
 
--- Helper to make clean wrapped scrolling frames to prevent clipping outlines
 local function createWrappedScrollList(parent, name, size, position, anchorPoint)
 	local wrapper = Instance.new("Frame")
 	wrapper.Name = name .. "Wrapper"
@@ -143,7 +142,15 @@ local function createCyclicalOption(parent, titleText, folderName, UIUtils)
 	rightBtn.Position = UDim2.new(0.75, 0, 0, 0)
 
 	local folder = CustomizationFolder:FindFirstChild(folderName)
-	local options = folder and folder:GetChildren() or {}
+	local options = {}
+	if folder then
+		for _, child in ipairs(folder:GetChildren()) do
+			-- Make sure we only index raw decals, avoiding Fill folders
+			if child:IsA("Decal") then
+				table.insert(options, child)
+			end
+		end
+	end
 	table.sort(options, function(a, b) return a.Name < b.Name end)
 
 	local maxOpt = #options
@@ -264,10 +271,9 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 	createColorGrid(custLeftSide, hairColors, "HairColor")
 
 	createSectionTitle(custLeftSide, "Eye Color")
-	createColorGrid(custLeftSide, eyeColors, nil)
+	createColorGrid(custLeftSide, eyeColors, "EyeColor")
 
 	createSectionTitle(custLeftSide, "Facial Features")
-	createCyclicalOption(custLeftSide, "Eyebrows", "Eyebrows", UIUtils)
 	createCyclicalOption(custLeftSide, "Eyes", "Eyes", UIUtils)
 	createCyclicalOption(custLeftSide, "Nose", "Nose", UIUtils)
 	createCyclicalOption(custLeftSide, "Mouth", "Mouth", UIUtils)
@@ -309,7 +315,7 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 	UIUtils.addListLayout(rightPanels["Hair IDs"], Enum.FillDirection.Vertical, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Top, 10)
 	createSectionTitle(rightPanels["Hair IDs"], "Equip Custom Hair")
 	local hairInputs = {}
-	for i = 1, 5 do -- Fixed to 5 Slots
+	for i = 1, 5 do
 		local hairInput = Instance.new("TextBox")
 		hairInput.Name = "HairID" .. i
 		hairInput.Size = UDim2.new(1, 0, 0, 45)
@@ -388,7 +394,6 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 				if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
 			end
 
-			-- Strip ALL current player accessories and clothing
 			for _, v in ipairs(dummy:GetChildren()) do
 				if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") then
 					v:Destroy()
@@ -413,7 +418,6 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 				pcall(function() hum:ApplyDescription(desc) end)
 
 				if accessoryInstance then
-					-- MANUAL WELD LOGIC FOR VIEWPORT: Bypass AddAccessory physics requirements
 					if accessoryInstance ~= "None" then
 						local accClone = accessoryInstance:Clone()
 						local handle = accClone:FindFirstChild("Handle")
@@ -453,7 +457,6 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 				end
 			end
 
-			-- Force BodyColors and BaseParts to pure white for clear viewing
 			local whiteColor = Color3.fromRGB(255, 255, 255)
 			local bodyColors = dummy:FindFirstChildWhichIsA("BodyColors")
 			if bodyColors then
@@ -473,6 +476,14 @@ function PlayerMenuBuilder.build(screenGui, UIUtils, bottomNavContainer)
 			local hrp = dummy:FindFirstChild("HumanoidRootPart")
 			if hrp then
 				cam.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 1.5, -6), hrp.Position)
+			end
+
+			local dHead = dummy:FindFirstChild("Head")
+			if dHead then
+				dHead.Transparency = 0.001
+				for _, v in ipairs(dHead:GetChildren()) do
+					if v:IsA("Decal") then v:Destroy() end
+				end
 			end
 
 			local connection
